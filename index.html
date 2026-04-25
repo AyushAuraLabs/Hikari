@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random Quote Generator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ============================================
+           GLOBAL STYLES
+           ============================================ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-image 0.8s ease-in-out;
+        }
+
+        /* ============================================
+           BACKGROUND & OVERLAY
+           ============================================ */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* ============================================
+           CONTAINER
+           ============================================ */
+        .container {
+            position: relative;
+            z-index: 2;
+            max-width: 600px;
+            width: 90%;
+            text-align: center;
+            padding: 60px 40px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            animation: slideIn 0.8s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ============================================
+           QUOTE SECTION
+           ============================================ */
+        .quote-section {
+            margin-bottom: 50px;
+        }
+
+        .quote-text {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 25px;
+            line-height: 1.6;
+            animation: fadeIn 0.6s ease-in;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .quote-author {
+            font-size: 1.1rem;
+            color: #e0e0e0;
+            font-style: italic;
+            margin-bottom: 10px;
+            animation: fadeIn 0.8s ease-in 0.2s both;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        .quote-author::before {
+            content: '— ';
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* ============================================
+           BUTTONS
+           ============================================ */
+        .buttons-container {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            animation: fadeIn 1s ease-in 0.4s both;
+        }
+
+        button {
+            padding: 14px 35px;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            font-family: 'Poppins', sans-serif;
+        }
+
+        /* Generate Quote Button */
+        .btn-generate {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-generate:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-generate:active {
+            transform: translateY(-1px);
+        }
+
+        /* Download Button */
+        .btn-download {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .btn-download:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 25px rgba(245, 87, 108, 0.4);
+        }
+
+        .btn-download:active {
+            transform: translateY(-1px);
+        }
+
+        /* ============================================
+           LOADING INDICATOR
+           ============================================ */
+        .loading {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ============================================
+           RESPONSIVE DESIGN
+           ============================================ */
+        @media (max-width: 768px) {
+            .container {
+                padding: 40px 25px;
+                width: 95%;
+            }
+
+            .quote-text {
+                font-size: 1.8rem;
+            }
+
+            .buttons-container {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Quote Section -->
+        <div class="quote-section">
+            <p class="quote-text" id="quote">The only way to do great work is to love what you do.</p>
+            <p class="quote-author" id="author">Steve Jobs</p>
+        </div>
+
+        <!-- Buttons Section -->
+        <div class="buttons-container">
+            <button class="btn-generate" onclick="generateQuote()">
+                Generate Quote
+                <span class="loading" id="loading"></span>
+            </button>
+            <button class="btn-download" onclick="downloadQuote()">Download Image</button>
+        </div>
+    </div>
+
+    <!-- Upload Background Image - Bottom Right -->
+    <div style="
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        z-index: 10;
+    ">
+        <label for="imageUpload" style="
+            display: inline-block;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 50px;
+            color: white;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            letter-spacing: 0.5px;
+            font-family: 'Poppins', sans-serif;
+        " onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 6px 25px rgba(102, 126, 234, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(0, 0, 0, 0.2)'">
+            📁 Upload Background
+        </label>
+        <input type="file" id="imageUpload" accept="image/*" style="display: none;" onchange="uploadBackgroundImage(event)">
+    </div>
+
+    <!-- Reset Background Button - Top Right (Round with Cross) -->
+    <button onclick="resetBackground()" style="
+        position: fixed;
+        top: 30px;
+        right: 30px;
+        z-index: 10;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: none;
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+        color: white;
+        font-size: 1.3rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+        font-weight: bold;
+    " onmouseover="this.style.transform='scale(1.15)'; this.style.boxShadow='0 6px 25px rgba(255, 107, 107, 0.5)'" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 15px rgba(255, 107, 107, 0.3)'">
+        ✕
+    </button>
+
+    <!-- HTML2Canvas Library for Download Feature -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <script>
+        // ============================================
+        // QUOTE DATA - Modern Business & Luxury Mindset
+        // ============================================
+        const quotes = [
+            {
+                text: "Money is the best business card.",
+                author: "Unknown"
+            },
+            {
+                text: "Build an empire, not just a business.",
+                author: "Andrew Tate"
+            },
+            {
+                text: "The only rule is: never lose money. Well, that's the first rule.",
+                author: "Warren Buffett"
+            },
+            {
+                text: "Luxury is a state of mind, not a price tag.",
+                author: "Christian Louboutin"
+            },
+            {
+                text: "Your network is your net worth.",
+                author: "Porter Gale"
+            },
+            {
+                text: "The goal isn't more money. The goal is living life on your own terms.",
+                author: "Chris Brogan"
+            },
+            {
+                text: "Success is not about working hard. It's about working smart.",
+                author: "Gary Vaynerchuk"
+            },
+            {
+                text: "Discipline is doing what you hate to do, but nonetheless doing it like you love it.",
+                author: "Mike Tyson"
+            },
+            {
+                text: "Don't work for money. Make money work for you.",
+                author: "Robert Kiyosaki"
+            },
+            {
+                text: "The man who moves a mountain begins by carrying away small stones.",
+                author: "Confucius"
+            },
+            {
+                text: "Grind now, shine later.",
+                author: "Unknown"
+            },
+            {
+                text: "Stop waiting for the perfect moment. It's time to become who you were meant to be.",
+                author: "Unknown"
+            },
+            {
+                text: "Excellence is not a skill, it's an attitude.",
+                author: "Ralph Marston"
+            },
+            {
+                text: "A man's wealth is measured by what he can afford to lose.",
+                author: "Unknown"
+            },
+            {
+                text: "The best time to invest was yesterday. The second best time is now.",
+                author: "Unknown"
+            },
+            {
+                text: "Luxury must be comfortable, otherwise it is not luxury.",
+                author: "Coco Chanel"
+            }
+        ];
+
+        // ============================================
+        // BACKGROUND IMAGES - Array of local image files
+        // Images are stored in the 'images' folder
+        // ============================================
+        const backgrounds = [
+            "url('images/pexels-alex-ning-523843601-37069218.jpg')",
+            "url('images/pexels-alexfu-945966.jpg')",
+            "url('images/pexels-ann-h-45017-33802234.jpg')",
+            "url('images/pexels-brett-sayles-9115406.jpg')",
+            "url('images/pexels-fotios-photos-3974405.jpg')",
+            "url('images/pexels-hector-marabelle-2157578915-34978726.jpg')",
+            "url('images/pexels-jubersahel-37202984.jpg')",
+            "url('images/pexels-kienvirak-36928649.jpg')",
+            "url('images/pexels-leeloothefirst-5842225.jpg')",
+            "url('images/pexels-muhammed-mahsum-tunc-859110584-35389652.jpg')",
+            "url('images/pexels-raybilcliff-5748338.jpg')",
+            "url('images/pexels-tom-schonmann-3315378-18430346.jpg')",
+            "url('images/pexels-viliamphotography-28966338.jpg')"
+        ];
+
+        // ============================================
+        // STATE VARIABLES
+        // ============================================
+        let currentQuoteIndex = 0;
+        let customBackgroundImage = null; // Store custom uploaded image
+
+        // ============================================
+        // FUNCTION: Upload background image
+        // Note: Image is stored in memory only (session-based)
+        // It will NOT be saved - only used during this session
+        // ============================================
+        function uploadBackgroundImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    customBackgroundImage = e.target.result;
+                    // Use the uploaded image immediately
+                    document.body.style.backgroundImage = `url('${customBackgroundImage}')`;
+                    document.body.style.backgroundSize = 'cover';
+                    document.body.style.backgroundPosition = 'center';
+                    document.body.style.backgroundAttachment = 'fixed';
+                    console.log('✓ Image uploaded successfully! (Session-based, not saved)');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // ============================================
+        // FUNCTION: Get random element from array
+        // ============================================
+        function getRandomElement(array) {
+            return array[Math.floor(Math.random() * array.length)];
+        }
+
+        // ============================================
+        // FUNCTION: Reset background to random image
+        // ============================================
+        function resetBackground() {
+            customBackgroundImage = null; // Clear uploaded image
+            const randomBackground = getRandomElement(backgrounds);
+            document.body.style.backgroundImage = randomBackground;
+            document.body.style.backgroundSize = 'cover';
+            document.body.style.backgroundPosition = 'center';
+            document.body.style.backgroundAttachment = 'fixed';
+            console.log('✓ Background reset! Now using random image from collection.');
+        }
+
+        // ============================================
+        // FUNCTION: Generate and display random quote
+        // ============================================
+        function generateQuote() {
+            const loadingSpinner = document.getElementById('loading');
+            const quoteElement = document.getElementById('quote');
+            const authorElement = document.getElementById('author');
+
+            // Show loading indicator
+            loadingSpinner.style.display = 'inline-block';
+
+            // Simulate slight delay for better UX
+            setTimeout(() => {
+                // Get random quote
+                const randomQuote = getRandomElement(quotes);
+
+                // Get random background - use uploaded image if available, otherwise use local images
+                let backgroundStyle;
+                if (customBackgroundImage) {
+                    backgroundStyle = `url('${customBackgroundImage}')`;
+                } else {
+                    const randomBackground = getRandomElement(backgrounds);
+                    backgroundStyle = randomBackground;
+                }
+
+                // Add fade-out effect
+                quoteElement.style.animation = 'none';
+                authorElement.style.animation = 'none';
+
+                // Trigger animation reset
+                setTimeout(() => {
+                    // Update quote and author
+                    quoteElement.textContent = randomQuote.text;
+                    authorElement.textContent = randomQuote.author;
+
+                    // Update background
+                    document.body.style.backgroundImage = backgroundStyle;
+                    document.body.style.backgroundSize = 'cover';
+                    document.body.style.backgroundPosition = 'center';
+                    document.body.style.backgroundAttachment = 'fixed';
+
+                    // Restart animations
+                    quoteElement.style.animation = 'fadeIn 0.6s ease-in';
+                    authorElement.style.animation = 'fadeIn 0.8s ease-in 0.2s both';
+
+                    // Hide loading indicator
+                    loadingSpinner.style.display = 'none';
+                }, 50);
+            }, 500);
+        }
+
+        // ============================================
+        // FUNCTION: Download quote as image
+        // ============================================
+        function downloadQuote() {
+            const downloadBtn = event.target.closest('button');
+            const originalText = downloadBtn.textContent;
+
+            // Change button text to show progress
+            downloadBtn.textContent = 'Downloading...';
+            downloadBtn.disabled = true;
+
+            // Get background - use custom if uploaded, otherwise use current
+            const bgImage = customBackgroundImage || window.getComputedStyle(document.body).backgroundImage;
+
+            // Create temporary wrapper with background and overlay
+            const tempWrapper = document.createElement('div');
+            let bgStyle = `
+                position: fixed;
+                top: -9999px;
+                left: -9999px;
+                width: 1000px;
+                height: 600px;
+                background-size: cover;
+                background-position: center;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            `;
+
+            if (customBackgroundImage) {
+                bgStyle += `background-image: url('${customBackgroundImage}');`;
+            } else {
+                bgStyle += `background-image: ${bgImage};`;
+            }
+
+            tempWrapper.style.cssText = bgStyle;
+
+            // Create overlay
+            const overlay = document.createElement('div');
+            overlay.style.cssText = `
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 1;
+            `;
+
+            // Create quote container (without buttons)
+            const tempContainer = document.createElement('div');
+            const quoteText = document.getElementById('quote').textContent;
+            const authorText = document.getElementById('author').textContent;
+
+            tempContainer.style.cssText = `
+                position: relative;
+                z-index: 2;
+                width: 600px;
+                text-align: center;
+                padding: 60px 40px;
+                background: rgba(255, 255, 255, 0.1);
+                backdrop-filter: blur(10px);
+                border-radius: 20px;
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                font-family: 'Poppins', sans-serif;
+            `;
+
+            tempContainer.innerHTML = `
+                <p style="
+                    font-family: 'Playfair Display', serif;
+                    font-size: 2.5rem;
+                    font-weight: 700;
+                    color: #ffffff;
+                    margin-bottom: 25px;
+                    line-height: 1.6;
+                    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+                    margin: 0;
+                ">
+                    ${quoteText}
+                </p>
+                <p style="
+                    font-size: 1.1rem;
+                    color: #e0e0e0;
+                    font-style: italic;
+                    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+                    margin: 0;
+                    margin-top: 20px;
+                ">
+                    ${authorText}
+                </p>
+            `;
+
+            // Assemble the temporary elements
+            tempWrapper.appendChild(overlay);
+            tempWrapper.appendChild(tempContainer);
+            document.body.appendChild(tempWrapper);
+
+            // Use html2canvas to capture everything
+            html2canvas(tempWrapper, {
+                backgroundColor: 'transparent',
+                scale: 2,
+                logging: false,
+                useCORS: true,
+                allowTaint: true
+            }).then(canvas => {
+                // Create download link
+                const link = document.createElement('a');
+                link.href = canvas.toDataURL('image/png');
+                link.download = `quote-${Date.now()}.png`;
+
+                // Trigger download
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                // Remove temporary container
+                document.body.removeChild(tempWrapper);
+
+                // Reset button
+                downloadBtn.textContent = originalText;
+                downloadBtn.disabled = false;
+            }).catch(error => {
+                console.error('Error downloading quote:', error);
+                document.body.removeChild(tempWrapper);
+                downloadBtn.textContent = originalText;
+                downloadBtn.disabled = false;
+                alert('Failed to download image. Please try again.');
+            });
+        }
+
+        // ============================================
+        // INITIALIZATION: Load first quote on page load
+        // ============================================
+        window.addEventListener('DOMContentLoaded', () => {
+            generateQuote();
+        });
+    </script>
+</body>
+</html>
